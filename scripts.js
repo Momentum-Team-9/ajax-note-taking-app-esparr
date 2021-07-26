@@ -1,15 +1,43 @@
+// I was able to understand everything that was happening with the example that Jeanette provided.
+// I typed that out here as I worked to understand it.
+// Unfortunately this weekend I was sick and wasn't able to go the next step of writing my own version.
+// I did make attempts to work through the logic of making the edit button function more intuitively but did not finish.
+
 const url = "http://localhost:3000/notes";
 const form = document.querySelector("#todo-form");
-const todoList = document.querySelector("todo-list");
+const todoList = document.querySelector("#todo-list");
 
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
+form.addEventListener("submit", function (event) {
+  event.preventDefault();
   const todoText = document.getElementById("todo-text").value;
   console.log(todoText);
   createTodo(todoText);
-  // this will clear my input after submitting a todo
   form.reset();
 });
+
+todoList.addEventListener("click", function (event) {
+  if (event.target.classList.contains("delete")) {
+    deleteTodo(event.target);
+  }
+  if (event.target.classList.contains("edit")) {
+    // let editTodoPlaceholder = document.getElementById("todo-text").placeholder;
+    // console.log(editTodoPlaceholder);
+    // const itemInList = notes.body;
+    // console.log(itemInList);
+    // editTodoPlaceholder = itemInList;
+    updateTodo(event.target);
+    form.reset();
+  }
+});
+
+// function hide(event) {
+//   event.target.style.visibility = "hidden";
+// }
+
+// form.addEventListener("submit", function (event) {
+//   // updateTodo(event.target);
+//   // form.reset();
+// });
 
 // Adds list items to the DOM
 function renderTodoItem(todoObj) {
@@ -40,9 +68,56 @@ function listTodos() {
   fetch(url)
     .then((response) => response.json())
     .then((data) => {
-      for (todo of data);
-      console.log(todo);
-      renderTodoItem(todo);
+      for (const todo of data) {
+        console.log(todo);
+        renderTodoItem(todo);
+      }
+    });
+}
+
+// POST request
+function createTodo(todoText) {
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-type": "application/json" },
+    body: JSON.stringify({
+      title: todoText,
+      body: todoText,
+      created_at: moment().format(),
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => renderTodoItem(data));
+}
+
+// DELETE request
+function deleteTodo(element) {
+  const todoId = element.parentElement.id;
+  fetch(url + "/" + `${todoId}`, {
+    method: "DELETE",
+  }).then(() => element.parentElement.remove());
+}
+
+// UPDATE todo
+function updateTodo(element) {
+  const todoId = element.parentElement.id;
+  const todoText = document.getElementById("todo-text").value;
+  fetch(url + "/" + `${todoId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: todoText,
+      body: todoText,
+      updated_at: moment().format(),
+    }),
+  })
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+
+      renderTodoText(element.parentElement, data);
     });
 }
 
